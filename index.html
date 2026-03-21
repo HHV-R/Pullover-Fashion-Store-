@@ -1066,6 +1066,28 @@ body{
   </div>
 </div>
 
+
+<!-- PASSWORD MODAL -->
+<div class="modal-ov" id="passModal" onclick="if(event.target===this)closePassModal()">
+  <div class="modal" style="max-height:auto;padding:28px 20px 36px">
+    <div class="mhandle"></div>
+    <div style="text-align:center;margin-bottom:6px;font-size:36px">🔒</div>
+    <div class="mtitle" style="text-align:center">لوحة الإدارة</div>
+    <div class="msub" style="text-align:center">أدخل كلمة السر للمتابعة</div>
+    <div class="mfg" style="margin-top:8px">
+      <label>كلمة السر</label>
+      <input type="password" id="passInput" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')submitPass()"
+        style="letter-spacing:0.2em;font-size:18px;text-align:center">
+    </div>
+    <div id="passErr" style="display:none;color:#B04040;font-size:12px;text-align:center;margin-bottom:12px">
+      ❌ كلمة السر غلط، حاول مجدداً
+    </div>
+    <button class="btn-cfm" onclick="submitPass()" style="margin-top:4px">دخول ←</button>
+    <button class="btn-cnl" onclick="closePassModal()">إلغاء</button>
+  </div>
+</div>
+
 <!-- SUCCESS -->
 <div class="success-ov" id="sucOv">
   <div class="suc-circle">✅</div>
@@ -1127,10 +1149,26 @@ function goStore(){showPage('storePage');renderStore()}
 function goCart(){renderCart();showPage('cartPage')}
 function goWish(){renderWish();showPage('wishPage')}
 function goAdmin(){
-  const p=prompt('🔒 كلمة سر الإدارة:');
-  if(!p)return;
-  if(p!==PASS){toast('❌ كلمة السر غلط',true);return}
-  renderAdmList();resetAdmForm();showPage('adminPage');
+  document.getElementById('passModal').classList.add('on');
+  setTimeout(()=>document.getElementById('passInput').focus(),200);
+}
+function submitPass(){
+  const p=document.getElementById('passInput').value;
+  if(p===PASS){
+    document.getElementById('passModal').classList.remove('on');
+    document.getElementById('passInput').value='';
+    document.getElementById('passErr').style.display='none';
+    renderAdmList();resetAdmForm();showPage('adminPage');
+  } else {
+    document.getElementById('passErr').style.display='block';
+    document.getElementById('passInput').value='';
+    document.getElementById('passInput').focus();
+  }
+}
+function closePassModal(){
+  document.getElementById('passModal').classList.remove('on');
+  document.getElementById('passInput').value='';
+  document.getElementById('passErr').style.display='none';
 }
 
 // Search
@@ -1173,40 +1211,4 @@ function renderStore(){
   const cats=['الكل',...new Set(products.map(p=>p.category).filter(Boolean))];
   const fb=document.getElementById('filterBar');
   const act=fb.querySelector('.fc.on')?.textContent||'الكل';
-  fb.innerHTML=cats.map(c=>`<button class="fc${c===act?' on':''}" onclick="filterCat('${c}',this)">${c}</button>`).join('');
-  const newP=products.filter(p=>p.tag==='new').slice(0,8);
-  const ns=document.getElementById('newSec');
-  if(newP.length){
-    document.getElementById('newScroll').innerHTML=newP.map(p=>`
-      <div class="feat-card" onclick="openProd('${p.id}')">
-        <div class="feat-img">
-          ${p.images?.[0]?`<img src="${p.images[0]}" loading="lazy">`:`<div class="feat-img-ph">👗</div>`}
-          <div class="feat-badge">جديد</div>
-        </div>
-        <div class="feat-info">
-          <div class="feat-name">${p.name}</div>
-          <div class="feat-unit">سعر الدرزن (12 قطعة)</div>
-          <div class="feat-price">${fmt(p.price)}</div>
-        </div>
-      </div>`).join('');
-    ns.style.display='block';
-  } else ns.style.display='none';
-  const filtered=act==='الكل'?products:products.filter(p=>p.category===act);
-  renderGrid(filtered);
-}
-
-function renderGrid(prods){
-  const g=document.getElementById('prodGrid');
-  document.getElementById('prodCount').textContent=prods.length?`${prods.length} منتج`:'';
-  if(!prods.length){g.innerHTML=`<div class="empty-st"><div class="ico">👗</div><div class="t">لا توجد منتجات</div></div>`;return}
-  g.innerHTML=prods.map((p,i)=>pcHTML(p,i)).join('');
-}
-
-function pcHTML(p,i){
-  const inStock=!p.stock||parseInt(p.stock)>0;
-  const low=parseInt(p.stock)>0&&parseInt(p.stock)<=3;
-  const sw=(p.colors||[]).slice(0,4).map(c=>`<div class="sw" style="background:${c.hex}"></div>`).join('');
-  const more=(p.colors||[]).length>4?`<span class="sw-more">+${p.colors.length-4}</span>`:'';
-  const img=p.images?.[0];
-  const tagMap={new:'new',hot:'hot',sale:'sale'};
-  const tagTxt={new:
+  fb.innerHTML=cats.map(c=>`<but
